@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IManuscriptDao">
+
+    <resultMap id="ManuscriptMap" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="title" column="title"/>
+        <result property="intro" column="intro"/>
+        <result property="tag" column="tag"/>
+        <result property="ingredient" column="ingredient"/>
+        <result property="step" column="step"/>
+        <result property="like" column="manuscript_like"/>
+        <result property="dislike" column="dislike"/>
+        <result property="favourite" column="favourite"/>
+        <result property="coins" column="coins"/>
+        <result property="reward" column="reward"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="manuscriptComments" ofType="cn.myspace.infrastructure.po.ManuscriptComment">
+            <result property="commentId" column="comment_id"/>
+            <result property="parentCommentId" column="parent_comment_id"/>
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="content" column="content"/>
+            <result property="creator" column="comment_creator"/>
+            <result property="createTime" column="comment_create_time"/>
+            <result property="updateTime" column="comment_update_time"/>
+        </collection>
+        <collection property="goods" ofType="cn.myspace.infrastructure.po.Goods" >
+            <result property="goodsId" column="goods_id"/>
+            <result property="name" column="name"/>
+            <result property="pic" column="pic"/>
+            <result property="tag" column="goods_tag"/>
+            <result property="intro" column="goods_intro"/>
+            <result property="price" column="price"/>
+            <result property="info" column="info"/>
+            <result property="creator" column="goods_creator"/>
+            <result property="createTime" column="goods_create_time"/>
+            <result property="updateTime" column="goods_update_time"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ManuscriptSimpleMap" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="title" column="title"/>
+        <result property="intro" column="intro"/>
+        <result property="tag" column="tag"/>
+        <result property="like" column="manuscript_like"/>
+        <result property="dislike" column="dislike"/>
+        <result property="favourite" column="favourite"/>
+        <result property="coins" column="coins"/>
+        <result property="reward" column="reward"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ManuscriptMapWithLikeList" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="like" column="like"/>
+        <collection property="likeUserList" ofType="cn.myspace.infrastructure.po.User">
+            <result property="userId" column="user_id"/>
+            <result property="email" column="email"/>
+            <result property="username" column="username"/>
+            <result property="follower" column="follower"/>
+            <result property="funs" column="funs"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ManuscriptMapWithDislikeList" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="dislike" column="dislike"/>
+        <collection property="likeUserList" ofType="cn.myspace.infrastructure.po.User">
+            <result property="userId" column="user_id"/>
+            <result property="email" column="email"/>
+            <result property="username" column="username"/>
+            <result property="follower" column="follower"/>
+            <result property="funs" column="funs"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ManuscriptMapWithFavouriteList" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="favourite" column="favourite"/>
+        <collection property="likeUserList" ofType="cn.myspace.infrastructure.po.User">
+            <result property="userId" column="user_id"/>
+            <result property="email" column="email"/>
+            <result property="username" column="username"/>
+            <result property="follower" column="follower"/>
+            <result property="funs" column="funs"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ManuscriptMapWithCoinsList" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="coins" column="coins"/>
+        <collection property="coinsUserList" ofType="cn.myspace.infrastructure.po.UserCoins">
+            <result property="userId" column="user_id"/>
+            <result property="donorId" column="donor_id"/>
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="coins" column="single_coins"/>
+            <result property="createTime" column="create_time"/>
+            <result property="updateTime" column="update_time"/>
+            <association property="donor" column="donor_id"
+                         select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                         javaType="cn.myspace.infrastructure.po.User">
+            </association>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ManuscriptMapWithRewardList" type="cn.myspace.infrastructure.po.Manuscript">
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="reward" column="reward"/>
+        <collection property="rewardUserList" ofType="cn.myspace.infrastructure.po.UserReward">
+            <result property="userId" column="user_id"/>
+            <result property="donorId" column="donor_id"/>
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="reward" column="single_reward"/>
+            <result property="createTime" column="create_time"/>
+            <result property="updateTime" column="update_time"/>
+            <association property="donor" column="donor_id"
+                         select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                         javaType="cn.myspace.infrastructure.po.User">
+            </association>
+        </collection>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ManuscriptMap">
+        select
+            manuscript.manuscript_id,
+            manuscript.title,
+            manuscript.intro,
+            manuscript.tag,
+            manuscript.ingredient,
+            manuscript.step,
+            manuscript.`like` as manuscript_like,
+            manuscript.dislike,
+            manuscript.favourite,
+            manuscript.coins,
+            manuscript.reward,
+            manuscript.creator,
+            manuscript.create_time,
+            manuscript.update_time,
+            mc.comment_id,
+            mc.parent_comment_id,
+            mc.content,
+            mc.creator as comment_creator,
+            mc.create_time as comment_create_time,
+            mc.update_time as comment_update_time,
+            g.goods_id,
+            g.name,
+            g.pic,
+            g.tag as goods_tag,
+            g.intro as goods_intro,
+            g.price,
+            g.info,
+            g.creator as goods_creator,
+            g.create_time as goods_create_time,
+            g.update_time as goods_update_time
+        from manuscript
+            join manuscript_comment mc on manuscript.manuscript_id = mc.manuscript_id  and mc.delete_mark = 0
+            join related_goods rg on mc.manuscript_id = rg.manuscript_id and rg.delete_mark = 0
+            join goods g on rg.goods_id = g.goods_id and g.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+        and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（simple）-->
+    <select id="querySimpleById" resultMap="ManuscriptSimpleMap">
+        select
+            manuscript_id, title, intro, tag, manuscript.`like`, dislike, favourite, coins, reward, creator,
+            create_time, update_time
+        from manuscript
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含点赞用户列表）-->
+    <select id="queryLikeById" resultMap="ManuscriptMapWithLikeList">
+        select
+            manuscript.manuscript_id,
+            manuscript.`like`,
+            u.user_id,
+            u.email,
+            u.username,
+            u.follower,
+            u.funs
+        from manuscript
+            join user_like ul on manuscript.manuscript_id = ul.manuscript_id  and ul.delete_mark = 0
+            join user u on ul.user_id = u.user_id  and u.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含点踩用户列表）-->
+    <select id="queryDislikeById" resultMap="ManuscriptMapWithDislikeList">
+        select
+            manuscript.manuscript_id,
+            manuscript.`dislike`,
+            u.user_id,
+            u.email,
+            u.username,
+            u.follower,
+            u.funs
+        from manuscript
+                 join user_dislike ud on manuscript.manuscript_id = ud.manuscript_id and ud.delete_mark = 0
+                 join user u on ud.user_id = u.user_id and u.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含收藏用户列表）-->
+    <select id="queryFavouriteById" resultMap="ManuscriptMapWithFavouriteList">
+        select
+            manuscript.manuscript_id,
+            manuscript.`favourite`,
+            u.user_id,
+            u.email,
+            u.username,
+            u.follower,
+            u.funs
+        from manuscript
+                 join user_collection uc on manuscript.manuscript_id = uc.manuscript_id and uc.delete_mark = 0
+                 join user u on uc.user_id = u.user_id and u.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含投币列表）-->
+    <select id="queryCoinsById" resultMap="ManuscriptMapWithCoinsList">
+        select
+            manuscript.manuscript_id,
+            manuscript.`coins`,
+            uc.user_id,
+            uc.donor_id,
+            uc.coins as single_coins,
+            uc.create_time,
+            uc.update_time
+        from manuscript
+                 join user_coins uc on manuscript.manuscript_id = uc.manuscript_id and uc.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含打赏列表）-->
+    <select id="queryRewardById" resultMap="ManuscriptMapWithRewardList">
+        select
+            manuscript.manuscript_id,
+            manuscript.`reward`,
+            ur.user_id,
+            ur.donor_id,
+            ur.reward as single_reward,
+            ur.create_time,
+            ur.update_time
+        from manuscript
+                 join user_reward ur on manuscript.manuscript_id = ur.manuscript_id and ur.delete_mark = 0
+        where manuscript.manuscript_id = #{manuscriptId}
+          and manuscript.delete_mark = 0
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryCount" resultType="long">
+        select count(1)
+        from manuscript
+        where delete_mark = 0
+        <if test="m.title != null and m.title != ''">
+            and title like concat(#{m.title}, '%')
+        </if>
+        <if test="m.tag != null and m.tag != ''">
+            and tag like concat('%', #{m.tag}, '%')
+        </if>
+        <if test="m.startTime != null and m.endTime != null">
+            and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{m.startTime} ,'%Y-%m-%d'))
+            and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{m.endTime},'%Y-%m-%d'))
+        </if>
+    </select>
+
+    <select id="queryAll" resultMap="ManuscriptSimpleMap">
+        select
+        manuscript_id, title, intro, tag, manuscript.`like`, dislike, favourite, coins, reward, creator,
+        create_time, update_time
+        from manuscript
+        where delete_mark = 0
+        <if test="m.title != null and m.title != ''">
+            and title like concat(#{m.title}, '%')
+        </if>
+        <if test="m.tag != null and m.tag != ''">
+            and tag like concat('%', #{m.tag}, '%')
+        </if>
+        <if test="m.startTime != null and m.endTime != null">
+            and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{m.startTime} ,'%Y-%m-%d'))
+            and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{m.endTime},'%Y-%m-%d'))
+        </if>
+        <if test="m.order != null and m.orderType != null">
+            order by ${m.order} ${m.orderType}
+        </if>
+        limit #{m.pageBegin}, #{m.pageEnd}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="manuscriptId" >
+        insert into manuscript(manuscript_id, title, intro, tag, ingredient, step, like, dislike, favourite, coins, reward,
+        creator, create_time, update_time, delete_mark)
+        values (#{manuscriptId}, #{title}, #{intro}, #{tag}, #{ingredient}, #{step}, #{like}, #{dislike}, #{favourite}, #{coins},
+        #{reward}, #{creator}, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update manuscript
+        <set>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="intro != null and intro != ''">
+                intro = #{intro},
+            </if>
+            <if test="tag != null and tag != ''">
+                tag = #{tag},
+            </if>
+            <if test="ingredient != null">
+                ingredient = #{ingredient},
+            </if>
+            <if test="step != null">
+                step = #{step},
+            </if>
+            <if test="like != null">
+                `like` = #{like},
+            </if>
+            <if test="dislike != null">
+                dislike = #{dislike},
+            </if>
+            <if test="favourite != null">
+                favourite = #{favourite},
+            </if>
+            <if test="coins != null">
+                coins = #{coins},
+            </if>
+            <if test="reward != null">
+                reward = #{reward},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where manuscript_id = #{manuscriptId}
+    </update>
+
+</mapper>

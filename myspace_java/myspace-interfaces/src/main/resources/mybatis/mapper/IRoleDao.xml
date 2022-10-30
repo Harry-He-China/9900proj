@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IRoleDao">
+
+    <resultMap type="cn.myspace.infrastructure.po.Role" id="RoleMap">
+        <result property="roleId" column="role_id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="roleKey" column="role_key"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="RoleMap">
+        select
+            role_id, role_name, role_key, create_time, update_time, delete_mark
+        from role
+        where role_id = #{roleId}
+    </select>
+
+    <!--查询用户对应的角色-->
+    <select id="queryByUserId" resultMap="RoleMap">
+        select
+            role.role_id,
+            role.role_name,
+            role.role_key,
+            role.create_time,
+            role.update_time
+        from role
+            join user_role ur on role.role_id = ur.role_id
+            join user u on ur.user_id = u.user_id
+        where u.user_id = #{userId}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="RoleMap">
+        select
+        role_id, role_name, role_key, create_time, update_time
+        from role
+        where delete_mark = 0
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="roleId" >
+        insert into role(role_id, role_name, role_key, create_time, update_time, delete_mark)
+        values (#{roleId}, #{roleName}, #{roleKey}, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update role
+        <set>
+            <if test="roleName != null and roleName != ''">
+                role_name = #{roleName},
+            </if>
+            <if test="roleKey != null and roleKey != ''">
+                role_key = #{roleKey},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where role_id = #{roleId}
+    </update>
+
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IGoodsCommentDao">
+
+    <resultMap type="cn.myspace.infrastructure.po.GoodsComment" id="GoodsCommentMap">
+        <result property="commentId" column="comment_id"/>
+        <result property="parentCommentId" column="parent_comment_id"/>
+        <result property="index" column="index"/>
+        <result property="orderId" column="order_id"/>
+        <result property="goodsId" column="goods_id"/>
+        <result property="content" column="content"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="comments" ofType="cn.myspace.infrastructure.po.GoodsComment">
+            <result property="commentId" column="child_comment_id"/>
+            <result property="parentCommentId" column="child_parent_comment_id"/>
+            <result property="index" column="child_index"/>
+            <result property="orderId" column="child_order_id"/>
+            <result property="goodsId" column="goods_id"/>
+            <result property="content" column="child_content"/>
+            <result property="creator" column="child_creator"/>
+            <result property="createTime" column="child_create_time"/>
+            <result property="updateTime" column="child_update_time"/>
+        </collection>
+    </resultMap>
+
+    <!-- 通过ID查询单条数据 -->
+    <select id="queryByIdWithChildComment" resultMap="GoodsCommentMap">
+        select
+            gc1.comment_id,
+            gc1.parent_comment_id,
+            gc1.`index`,
+            gc1.goods_id,
+            gc1.order_id,
+            gc1.content,
+            gc1.creator,
+            gc1.create_time,
+            gc1.update_time,
+            gc2.comment_id as child_comment_id,
+            gc2.parent_comment_id as child_parent_comment_id,
+            gc2.`index` as child_index,
+            gc2.order_id as child_order_id,
+            gc2.content as child_content,
+            gc2.creator as child_creator,
+            gc2.create_time as child_create_time,
+            gc2.update_time as child_update_time
+        from goods_comment gc1
+             join goods_comment gc2 on gc2.delete_mark = 0 and gc1.comment_id = gc2.parent_comment_id
+        where gc1.comment_id = #{commentId}
+          and gc1.delete_mark = 0
+        order by gc1.parent_comment_id, gc1.`index`
+    </select>
+    
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="commentId" >
+        insert into goods_comment(comment_id, parent_comment_id, `index`, order_id, goods_id, content, creator, create_time,
+        update_time, delete_mark)
+        values (#{commentId}, #{parentCommentId}, #{index}, #{orderId}, #{goodsId}, #{content}, #{creator}, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update goods_comment
+        <set>
+            <if test="content != null">
+                content = #{content},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where comment_id = #{commentId}
+    </update>
+
+</mapper>

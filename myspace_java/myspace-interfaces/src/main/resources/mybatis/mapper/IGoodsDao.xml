@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IGoodsDao">
+
+    <resultMap type="cn.myspace.infrastructure.po.Goods" id="GoodsMap">
+        <result property="goodsId" column="goods_id"/>
+        <result property="name" column="name"/>
+        <result property="pic" column="pic"/>
+        <result property="tag" column="tag"/>
+        <result property="intro" column="intro"/>
+        <result property="price" column="price"/>
+        <result property="info" column="info"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="cn.myspace.infrastructure.po.Goods" id="GoodsMapWithComment">
+        <result property="goodsId" column="goods_id"/>
+        <result property="name" column="name"/>
+        <result property="pic" column="pic"/>
+        <result property="tag" column="tag"/>
+        <result property="intro" column="intro"/>
+        <result property="price" column="price"/>
+        <result property="info" column="info"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="goodsComments" ofType="cn.myspace.infrastructure.po.GoodsComment">
+            <result property="commentId" column="comment_id"/>
+            <result property="parentCommentId" column="parent_comment_id"/>
+            <result property="orderId" column="order_id"/>
+            <result property="goodsId" column="goods_id"/>
+            <result property="content" column="content"/>
+            <result property="creator" column="comment_creator"/>
+            <result property="createTime" column="comment_create_time"/>
+            <result property="updateTime" column="comment_update_time"/>
+        </collection>
+    </resultMap>
+
+    <resultMap type="cn.myspace.infrastructure.po.Goods" id="GoodsMapWithManuscript">
+        <result property="goodsId" column="goods_id"/>
+        <result property="name" column="name"/>
+        <result property="pic" column="pic"/>
+        <result property="tag" column="tag"/>
+        <result property="intro" column="intro"/>
+        <result property="price" column="price"/>
+        <result property="info" column="info"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="manuscripts" ofType="cn.myspace.infrastructure.po.Manuscript">
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="title" column="title"/>
+            <result property="intro" column="intro"/>
+            <result property="tag" column="manuscript_tag"/>
+            <result property="ingredient" column="ingredient"/>
+            <result property="step" column="step"/>
+            <result property="like" column="manuscript_like"/>
+            <result property="dislike" column="dislike"/>
+            <result property="favourite" column="favourite"/>
+            <result property="coins" column="coins"/>
+            <result property="reward" column="reward"/>
+            <result property="creator" column="manuscript_creator"/>
+            <result property="createTime" column="manuscript_create_time"/>
+            <result property="updateTime" column="manuscript_update_time"/>
+        </collection>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="GoodsMap">
+        select
+        goods_id, name, pic, tag, intro, price, info, creator, create_time, update_time
+        from goods
+        where goods_id = #{goodsId}
+          and delete_mark = 0
+        limit 1
+    </select>
+
+    <!--查询单个（包含商品评论）-->
+    <select id="queryByIdWithComment" resultMap="GoodsMapWithComment">
+        select
+            goods.goods_id,
+            goods.name,
+            goods.pic,
+            goods.tag,
+            goods.intro,
+            goods.price,
+            goods.info,
+            goods.creator,
+            goods.create_time,
+            goods.update_time,
+            gc.comment_id,
+            gc.parent_comment_id,
+            gc.`index`,
+            gc.order_id,
+            gc.content,
+            gc.creator as comment_creator,
+            gc.create_time as comment_create_time,
+            gc.update_time as comment_update_time
+        from goods
+            join goods_comment gc on goods.goods_id = gc.goods_id and gc.delete_mark = 0
+        where goods.goods_id = #{goodsId}
+          and goods.delete_mark = 0
+        limit 1
+    </select>
+
+    <!--查询单个（包含商品相关帖子）-->
+    <select id="queryByIdWithManuscript" resultMap="GoodsMapWithManuscript">
+        select
+            goods.goods_id,
+            goods.name,
+            goods.pic,
+            goods.tag,
+            goods.intro,
+            goods.price,
+            goods.info,
+            goods.creator,
+            goods.create_time,
+            goods.update_time,
+            m.manuscript_id,
+            m.title,
+            m.intro,
+            m.tag as manuscript_tag,
+            m.ingredient,
+            m.step,
+            m.`like` as manuscript_like,
+            m.dislike,
+            m.favourite,
+            m.coins,
+            m.reward,
+            m.creator as manuscript_creator,
+            m.create_time as manuscript_create_time,
+            m.update_time as manuscript_update_time
+        from goods
+            join related_goods rg on goods.goods_id = rg.goods_id and rg.delete_mark = 0
+            join manuscript m on rg.manuscript_id = m.manuscript_id and rg.delete_mark = 0
+        where goods.goods_id = #{goodsId}
+          and goods.delete_mark = 0
+        limit 1
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryCount" resultType="long">
+        select count(1)
+        from goods
+        where delete_mark = 0
+        <if test="g.name != null and g.name != ''">
+            and name like concat(#{g.name}, '%')
+        </if>
+        <if test="g.tag != null and g.tag != ''">
+            and tag like concat('%', #{g.tag}, '%')
+        </if>
+        <if test="g.creator != null">
+            and creator = #{g.creator}
+        </if>
+        <if test="g.minPrice != null and g.maxPrice != null">
+            and price &lt;= #{g.maxPrice}
+            and price &gt;= #{g.minPrice}
+        </if>
+        <if test="g.startTime != null and g.endTime != null">
+            and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{g.startTime} ,'%Y-%m-%d'))
+            and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{g.endTime},'%Y-%m-%d'))
+        </if>
+    </select>
+
+    <select id="queryAll" resultMap="GoodsMap">
+        select
+        goods_id, name, pic, tag, intro, price, info, creator, create_time, update_time
+        from goods
+        where delete_mark = 0
+        <if test="g.name != null and g.name != ''">
+            and name like concat(#{g.name}, '%')
+        </if>
+        <if test="g.tag != null and g.tag != ''">
+            and tag like concat('%', #{g.tag}, '%')
+        </if>
+        <if test="g.creator != null">
+            and creator = #{g.creator}
+        </if>
+        <if test="g.minPrice != null and g.maxPrice != null">
+            and price &lt;= #{g.maxPrice}
+            and price &gt;= #{g.minPrice}
+        </if>
+        <if test="g.startTime != null and g.endTime != null">
+            and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{g.startTime} ,'%Y-%m-%d'))
+            and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{g.endTime},'%Y-%m-%d'))
+        </if>
+        <if test="g.order != null and g.orderType != null">
+            order by ${g.order} ${g.orderType}
+        </if>
+        limit #{g.pageBegin}, #{g.pageEnd}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="goodsId">
+        insert into goods(goods_id, name, pic, tag, intro, price, info, creator, create_time, update_time, delete_mark)
+        values (#{goodsId}, #{name}, #{pic}, #{tag}, #{intro}, #{price}, #{info}, #{creator}, sysdate(),sysdate(),0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update goods
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="pic != null">
+                pic = #{pic},
+            </if>
+            <if test="tag != null and tag != ''">
+                tag = #{tag},
+            </if>
+            <if test="intro != null and intro != ''">
+                intro = #{intro},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="info != null">
+                info = #{info},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where goods_id = #{goodsId}
+    </update>
+
+
+</mapper>

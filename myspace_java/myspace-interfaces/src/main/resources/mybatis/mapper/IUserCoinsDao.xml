@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IUserCoinsDao">
+
+    <resultMap id="UserCoinsMapForContributor" type="cn.myspace.infrastructure.po.UserCoins">
+        <result property="userId" column="user_id"/>
+        <result property="donorId" column="donor_id"/>
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="coins" column="coins"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="donor" column="donor_id"
+                     select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+        <association property="manuscript" column="manuscript_id"
+                     select="cn.myspace.infrastructure.dao.IManuscriptDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+    </resultMap>
+
+    <resultMap id="UserCoinsMapForDonor" type="cn.myspace.infrastructure.po.UserCoins">
+        <result property="userId" column="user_id"/>
+        <result property="donorId" column="donor_id"/>
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="coins" column="coins"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="contributor" column="user_id"
+                     select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+        <association property="manuscript" column="manuscript_id"
+                     select="cn.myspace.infrastructure.dao.IManuscriptDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+    </resultMap>
+
+    <resultMap id="UserCoinsMapForManuscript" type="cn.myspace.infrastructure.po.UserCoins">
+        <result property="userId" column="user_id"/>
+        <result property="donorId" column="donor_id"/>
+        <result property="manuscriptId" column="manuscript_id"/>
+        <result property="coins" column="coins"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="contributor" column="user_id"
+                     select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+        <association property="donor" column="donor_id"
+                     select="cn.myspace.infrastructure.dao.IUserDao.querySimpleById"
+                     javaType="cn.myspace.infrastructure.po.User">
+        </association>
+    </resultMap>
+
+    <!-- 查询所有获得的投币记录 -->
+    <select id="querySelfById" resultMap="UserCoinsMapForContributor">
+        select
+        user_id, donor_id, manuscript_id, coins, create_time, update_time
+        from user_coins
+        where user_id = #{userId}
+            and delete_mark = 0
+    </select>
+
+    <!-- 查询所有发起的投币记录 -->
+    <select id="queryDonorById" resultMap="UserCoinsMapForDonor">
+        select
+            user_id, donor_id, manuscript_id, coins, create_time, update_time
+        from user_coins
+        where donor_id = #{donorId}
+          and delete_mark = 0
+    </select>
+
+    <!-- 查询帖子的所有投币记录 -->
+    <select id="queryManuscriptById" resultMap="UserCoinsMapForManuscript">
+        select
+            user_id, donor_id, manuscript_id, coins, create_time, update_time
+        from user_coins
+        where manuscript_id = #{manuscriptId}
+          and delete_mark = 0
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="userId" >
+        insert into user_coins(user_id, donor_id, manuscript_id, coins, create_time, update_time, delete_mark)
+        values (#{userId}, #{donorId}, #{manuscriptId}, #{coins}, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update user_coins
+        <set>
+            <if test="coins != null">
+                coins = #{coins},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where user_id = #{userId}
+          and donor_id = #{donorId}
+          and manuscript_id = #{manuscriptId}
+    </update>
+
+</mapper>

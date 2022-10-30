@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IUserFollowDao">
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="userId" >
+        insert into user_follow(user_id, follower_id, create_time, update_time, delete_mark)
+        values (#{userId}, #{followerId}, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update user_follow
+        <set>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where user_id = #{userId}
+        and follower_id = #{followerId}
+    </update>
+
+</mapper>

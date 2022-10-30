@@ -1,0 +1,36 @@
+package cn.myspace.infrastructure.dao;
+
+import cn.myspace.infrastructure.po.ManuscriptComment;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * (ManuscriptComment)表数据库访问层
+ */
+@Mapper
+public interface IManuscriptCommentDao {
+
+    /**
+     * 通过ID查询单条数据
+     *
+     * @param commentId 主键
+     * @return 实例对象
+     */
+    ManuscriptComment queryByIdWithChildComment(Long commentId);
+
+    /**
+     * 新增数据
+     *
+     * @param manuscriptComment 实例对象
+     * @return 影响行数
+     */
+    int insert(ManuscriptComment manuscriptComment);
+
+    /**
+     * 修改数据
+     *
+     * @param manuscriptComment 实例对象
+     * @return 影响行数
+     */
+    int update(ManuscriptComment manuscriptComment);
+
+}

@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myspace.infrastructure.dao.IUserDao">
+
+    <resultMap id="UserMap" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="coinsHolding" column="coins_holding"/>
+        <result property="follower" column="follower"/>
+        <result property="funs" column="funs"/>
+        <result property="rewardTotal" column="reward_total"/>
+        <result property="coinsTotal" column="coins_total"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="info" column="user_id"
+                     select="cn.myspace.infrastructure.dao.IUserInfoDao.queryById"
+                     javaType="cn.myspace.infrastructure.po.UserInfo">
+        </association>
+        <association property="role" column="user_id"
+                     select="cn.myspace.infrastructure.dao.IRoleDao.queryByUserId"
+                     javaType="cn.myspace.infrastructure.po.Role">
+        </association>
+    </resultMap>
+
+    <resultMap id="UserSimpleMap" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="follower" column="follower"/>
+        <result property="funs" column="funs"/>
+    </resultMap>
+
+    <resultMap id="UserMapForFollower" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="follower" column="follower"/>
+        <collection property="followerList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserFollowDao.queryFollowerById"
+                    javaType="cn.myspace.infrastructure.po.UserFollow">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForFuns" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="funs" column="funs"/>
+        <collection property="funsList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserFollowDao.queryFunsById"
+                    ofType="cn.myspace.infrastructure.po.UserFollow">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForSelfReward" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="selfRewardTotal" column="self_reward_total"/>
+        <collection property="selfRewardList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserRewardDao.querySelfById"
+                    ofType="cn.myspace.infrastructure.po.UserReward">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForReward" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="rewardTotal" column="reward_total"/>
+        <collection property="rewardList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserRewardDao.queryDonorById"
+                    ofType="cn.myspace.infrastructure.po.UserReward">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForSelfCoins" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="coinsHolding" column="coins_holding"/>
+        <result property="selfCoinsTotal" column="self_coins_total"/>
+        <collection property="selfCoinsList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserCoinsDao.querySelfById"
+                    ofType="cn.myspace.infrastructure.po.UserCoins">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForCoins" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="coinsTotal" column="coins_total"/>
+        <collection property="coinsList" column="user_id"
+                    select="cn.myspace.infrastructure.dao.IUserCoinsDao.queryDonorById"
+                    ofType="cn.myspace.infrastructure.po.UserCoins">
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForLike" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="likeTotal" column="like_total"/>
+        <collection property="likeList" ofType="cn.myspace.infrastructure.po.Manuscript">
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="title" column="title"/>
+            <result property="intro" column="intro"/>
+            <result property="tag" column="tag"/>
+            <result property="createTime" column="create_time"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="UserMapForCollection" type="cn.myspace.infrastructure.po.User">
+        <result property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="username" column="username"/>
+        <result property="collectionTotal" column="collection_total"/>
+        <collection property="collectionList" ofType="cn.myspace.infrastructure.po.Manuscript">
+            <result property="manuscriptId" column="manuscript_id"/>
+            <result property="title" column="title"/>
+            <result property="intro" column="intro"/>
+            <result property="tag" column="tag"/>
+            <result property="createTime" column="create_time"/>
+        </collection>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="UserMap">
+        select
+            user_id,
+            email,
+            username,
+            password,
+            coins_holding,
+            follower,
+            funs,
+            reward_total,
+            coins_total,
+            create_time,
+            update_time
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（simple）-->
+    <select id="querySimpleById" resultMap="UserSimpleMap">
+        select
+        user_id, email, username, follower, funs
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含关注列表）-->
+    <select id="queryFollowerById" resultMap="UserMapForFollower">
+        select
+        user_id, email, username, follower
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含粉丝列表）-->
+    <select id="queryFunsById" resultMap="UserMapForFuns">
+        select
+        user_id, email, username, funs
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含打赏记录）-->
+    <select id="querySelfRewardById" resultMap="UserMapForSelfReward">
+        select
+            user_id, email, username,
+            (select count(1) from user_reward ur where user.user_id = ur.user_id) as self_reward_total
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含被打赏记录）-->
+    <select id="queryRewardById" resultMap="UserMapForReward">
+        select
+            user_id, email, username, reward_total
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含投币记录）-->
+    <select id="querySelfCoinsById" resultMap="UserMapForSelfCoins">
+        select
+            user_id, email, username, coins_holding,
+            (select count(1) from user_coins uc where user.user_id = uc.user_id) as self_coins_total
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含被投币记录）-->
+    <select id="queryCoinsById" resultMap="UserMapForCoins">
+        select
+            user_id, email, username, coins_total
+        from user
+        where user_id = #{userId} and delete_mark = 0
+    </select>
+
+    <!--查询单个（包含帖子喜欢列表）-->
+    <select id="queryLikeById" resultMap="UserMapForLike">
+        select
+            user.user_id,
+            user.email,
+            user.username,
+            (select count(1) from user_like ul where user.user_id = ul.user_id) as like_total,
+            m.manuscript_id,
+            m.title,
+            m.intro,
+            m.tag,
+            m.create_time
+        from user
+            join user_like ul1 on user.user_id = ul1.user_id
+            join manuscript m on ul1.manuscript_id = m.manuscript_id
+        where user.user_id = #{userId} and user.delete_mark = 0
+    </select>
+
+    <!--查询单个（包含帖子收藏列表）-->
+    <select id="queryCollectionById" resultMap="UserMapForCollection">
+        select
+            user.user_id,
+            user.email,
+            user.username,
+            (select count(1) from user_collection uc where user.user_id = uc.user_id) as collection_total,
+            m.manuscript_id,
+            m.title,
+            m.intro,
+            m.tag,
+            m.create_time
+        from user
+                 join user_collection uc1 on user.user_id = uc1.user_id
+                 join manuscript m on uc1.manuscript_id = m.manuscript_id
+        where user.user_id = #{userId} and user.delete_mark = 0
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryCount" resultType="long">
+        select count(1)
+        from user
+        <where>
+            <if test="u.email != null and u.email != ''">
+                and email like concat(#{u.email},"%")
+            </if>
+            <if test="u.username != null and u.username != ''">
+                and username like concat(#{u.username},"%")
+            </if>
+            <if test="u.startTime != null and u.endTime != null">
+                and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{u.startTime} ,'%Y-%m-%d'))
+                and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{u.endTime},'%Y-%m-%d'))
+            </if>
+            and delete_mark = 0
+        </where>
+    </select>
+
+    <select id="queryAll" resultMap="UserMap">
+        select
+            user_id,
+            email,
+            username,
+            coins_holding,
+            follower,
+            funs,
+            reward_total,
+            coins_total,
+            create_time,
+            update_time
+        from user
+        <where>
+            <if test="u.email != null and u.email != ''">
+                and email like concat(#{u.email},"%")
+            </if>
+            <if test="u.username != null and u.username != ''">
+                and username like concat(#{u.username},"%")
+            </if>
+            <if test="u.startTime != null and u.endTime != null">
+                and (date_format(create_time ,'%Y-%m-%d') &lt;= date_format(#{u.startTime} ,'%Y-%m-%d'))
+                and (date_format(create_time ,'%Y-%m-%d') &gt;= date_format(#{u.endTime},'%Y-%m-%d'))
+            </if>
+                and delete_mark = 0
+            <if test="u.order != null and u.orderType != null">
+                order by ${u.order} ${u.orderType}
+            </if>
+        </where>
+        limit #{u.pageBegin}, #{u.pageEnd}
+    </select>
+
+    <select id="queryUserByName" resultMap="UserSimpleMap">
+        select
+            user_id, email, username, follower, funs
+        from user
+        where (email = #{name}
+          or username = #{name})
+          and delete_mark = 0
+        limit 1
+    </select>
+
+    <select id="queryUserByEmail" resultMap="UserSimpleMap">
+        select
+            user_id, email, username, follower, funs
+        from user
+        where email = #{email}
+          and password = #{password}
+          and delete_mark = 0
+    </select>
+
+    <select id="queryUserByUsername" resultMap="UserSimpleMap">
+        select
+            user_id, email, username, follower, funs
+        from user
+        where username = #{username}
+          and password = #{password}
+          and delete_mark = 0
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="userId" >
+        insert into user(user_id, email, username, password, coins_holding, follower, funs, reward_total, coins_total,
+        create_time, update_time, delete_mark)
+        values (#{userId}, #{email}, #{username}, #{password}, 0, 0, 0, 0, 0, sysdate(), sysdate(), 0)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update user
+        <set>
+            <if test="email != null and email != ''">
+                email = #{email},
+            </if>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="coinsHolding != null">
+                coins_holding = #{coinsHolding},
+            </if>
+            <if test="follower != null">
+                follower = #{follower},
+            </if>
+            <if test="funs != null">
+                funs = #{funs},
+            </if>
+            <if test="rewardTotal != null">
+                reward_total = #{rewardTotal},
+            </if>
+            <if test="coinsTotal != null">
+                coins_total = #{coinsTotal},
+            </if>
+                update_time = sysdate(),
+            <if test="deleteMark != null">
+                delete_mark = #{deleteMark},
+            </if>
+        </set>
+        where user_id = #{userId}
+    </update>
+
+</mapper>
